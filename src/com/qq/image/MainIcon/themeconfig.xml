@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<theme-config PackID="8C9DAFF3E7AD170FAF1DF65D26734648" PackPreview="preview.png" PackLogonPreview="logon_preview.png" PackRecentPreview="recent_preview.png" PackVersion="2.0" PackMinVer="2509" PackName="skin">
+    <backgroundlist>
+        <background preview="bg_preview.png" mainfile="main.png" mainloc="topleft" aioloc="topleft" bkgstyle="stretch" color="ff1e7db9" />
+    </backgroundlist>
+</theme-config>
