@@ -1,6 +1,8 @@
 package com.qq.view;
 
-
+import com.qq.bean.Message;
+import com.qq.bean.MessageType;
+import com.qq.bean.UserInfo;
 import com.qq.ui.BackgroundPanel;
 import com.qq.ui.MyButton;
 import com.qq.ui.MyOptionPane;
@@ -15,8 +17,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-public class ChatFrame extends JFrame{
+public class ChatFrame  extends ClientJFrame{
 
     private BackgroundPanel chatPanel = new BackgroundPanel("chat");
 
@@ -33,6 +37,9 @@ public class ChatFrame extends JFrame{
 
     private JLabel lbl_title; //标题
 
+    private JEditorPane editorPane; //中间的聊天内容
+    private JScrollPane editorScrollPane;
+
 
     private static final int[][] btnPos = {
             //定义上方的几个按钮
@@ -41,9 +48,26 @@ public class ChatFrame extends JFrame{
             {7,377,22,22},{35,377,22,22},{63,377,22,22},{91,377,34,22},{126,377,22,22},{153,377,34,22},{192,377,22,22},{217,377,34,22}
     };
 
+    private UserInfo userInfo;
+    private UserInfo self;
+
+    public void setSelf(UserInfo self) {
+        this.self = self;
+    }
+
+
+    public void setUserInfo(UserInfo userInfo) {
+        this.userInfo = userInfo;
+        setTitle("与"+userInfo.getNickname()+"聊天中...");
+        lbl_title.setText(userInfo.getNickname()+"（"+userInfo.getQq()+"）");
+    }
+
 
 
     public ChatFrame(){
+        super();
+
+
         setUndecorated(true);
         setResizable(false);
         setTitle("与好友聊天中...");
@@ -115,13 +139,25 @@ public class ChatFrame extends JFrame{
                 }
             }
         });
+        txt_message.setLineWrap(true);
+        txt_message.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(txt_message);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setBounds(2,405,443,69);
         chatPanel.add(scrollPane);
 
-
-
+        editorPane = new JEditorPane();
+        editorPane.setOpaque(false);
+        editorPane.setFont(new Font("微软雅黑",Font.BOLD,14));
+        editorPane.setBorder(BorderFactory.createEmptyBorder());
+        editorScrollPane = new JScrollPane(editorPane, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        editorScrollPane.setBounds(2,84,443,287);
+        editorScrollPane.setOpaque(false);
+        editorScrollPane.setBackground(null);
+        editorScrollPane.setBorder(BorderFactory.createEmptyBorder());
+        editorScrollPane.getViewport().setOpaque(false);
+        editorScrollPane.setHorizontalScrollBar(null);
+        chatPanel.add(editorScrollPane);
 
         chatPanel.setLayout(new BorderLayout());
         chatPanel.addMouseMotionListener(new MouseDragListener(chatPanel,this));
@@ -129,26 +165,58 @@ public class ChatFrame extends JFrame{
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         setLocationRelativeTo(null);
-
     }
 
-    public static void main(String[] args) {
+    private StringBuilder databuf = new StringBuilder("<style>.title{font-size:10px} .content{font-size:14px}</style>");
 
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                ChatFrame chatFrame = new ChatFrame();
-                chatFrame.setVisible(true);
-            }
-        });
+    public void appendText(Message message){
+        databuf.append("<div class='title'>").append(message.getFrom().getNickname()).append(' ').append(message.getTime()).append(':').append("</div>");
+        databuf.append("<div class='content'>").append(message.getContent()).append("</div><br>");
+        editorPane.setContentType("text/html");
+        editorPane.setText(databuf.toString());
+
+        JScrollBar scrollBar = editorScrollPane.getVerticalScrollBar();
+        scrollBar.setValue(scrollBar.getMaximum());
     }
 
-    public void alert(String m){
-        MyOptionPane.showMessageDialog(this,"发送消息","提示");
-    }
+
 
     private void sendMessage(){
-        alert("发送消息！");
+
+
+        String txt = txt_message.getText();
+        txt_message.setText("");
+        if(txt.isEmpty()){
+            MyOptionPane.showMessageDialog(this,"请输入内容！","提示");
+            return;
+        }
+        //封装chatMessage
+        Message message = new Message();
+        message.setFrom(self);
+        message.setTo(userInfo);
+        message.setType(MessageType.MESSAGE);
+        message.setTime(getNow());
+        message.setContent(txt);
+        sendOrAlert(message);
+
+        Message res = awaitOrAlert();
+        switch (res.getType()){
+            case SUCCESS:
+                appendText(message);
+                break;
+            case ERROR:
+                MyOptionPane.showMessageDialog(this,res.getContent(),"错误");
+                break;
+        }
     }
+
+
+
+    private static String getNow() {
+        Date d = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+        return sdf.format(d);
+    }
+
 
 }

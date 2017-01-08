@@ -10,9 +10,15 @@ import java.sql.SQLException;
  * 连接数据库
  */
 public class JdbcUtil {
-    private static final Props props = Props.load("server/jdbc");
+
+    private static final String url,user,pwd;
 
     static {
+        Props props = Props.load("server/jdbc");
+        url = props.getProperty("jdbc.url");
+        user = props.getProperty("jdbc.user");
+        pwd = props.getProperty("jdbc.pwd");
+
         try {
             Class.forName(props.getProperty("jdbc.driver"));
         } catch (ClassNotFoundException e) {
@@ -20,10 +26,7 @@ public class JdbcUtil {
         }
     }
 
-    public static Connection connect() throws SQLException{
-        String url = props.getProperty("jdbc.url");
-        String user = props.getProperty("jdbc.user");
-        String pwd = props.getProperty("jdbc.pwd");
+    public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url,user,pwd);
     }
 

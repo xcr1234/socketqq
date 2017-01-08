@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataSource name="swingqq@localhost">
+  <database-model serializer="dbm" rdbms="MYSQL" format-version="4.0">
+    <root id="1"/>
+    <schema id="2" parent="1" name="swingqq">
+      <Current>1</Current>
+      <Visible>1</Visible>
+    </schema>
+    <schema id="3" parent="1" name="feiqq"/>
+    <schema id="4" parent="1" name="information_schema"/>
+    <schema id="5" parent="1" name="javaqq"/>
+    <schema id="6" parent="1" name="mysql"/>
+    <schema id="7" parent="1" name="performance_schema"/>
+    <schema id="8" parent="1" name="study"/>
+    <schema id="9" parent="1" name="sys"/>
+    <table id="10" parent="2" name="friends">
+      <Comment>好友的存储方式是，按照id1&lt;id2的进行存储。</Comment>
+    </table>
+    <table id="11" parent="2" name="userinfo"/>
+    <column id="12" parent="10" name="id">
+      <Position>1</Position>
+      <DataType>int(11)|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="13" parent="10" name="userinfo1">
+      <Position>2</Position>
+      <DataType>int(11)|0</DataType>
+    </column>
+    <column id="14" parent="10" name="userinfo2">
+      <Position>3</Position>
+      <DataType>int(11)|0</DataType>
+    </column>
+    <key id="15" parent="10" name="PRIMARY">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="16" parent="11" name="id">
+      <Position>1</Position>
+      <Comment>id，虽然QQ号码也是唯一的，但用自增的id作主键任然要方便很多，。</Comment>
+      <DataType>int(11)|0</DataType>
+      <NotNull>1</NotNull>
+      <SequenceIdentity>1</SequenceIdentity>
+    </column>
+    <column id="17" parent="11" name="qq">
+      <Position>2</Position>
+      <Comment>qq号</Comment>
+      <DataType>int(20)|0</DataType>
+    </column>
+    <column id="18" parent="11" name="nickname">
+      <Position>3</Position>
+      <Comment>昵称</Comment>
+      <DataType>varchar(20)|0</DataType>
+    </column>
+    <column id="19" parent="11" name="password">
+      <Position>4</Position>
+      <Comment>密码,MD5存储</Comment>
+      <DataType>varchar(32)|0</DataType>
+    </column>
+    <column id="20" parent="11" name="sex">
+      <Position>5</Position>
+      <Comment>1=男,0=女；</Comment>
+      <DataType>bit(1)|0</DataType>
+    </column>
+    <column id="21" parent="11" name="birthday">
+      <Position>6</Position>
+      <DataType>varchar(20)|0</DataType>
+    </column>
+    <column id="22" parent="11" name="star">
+      <Position>7</Position>
+      <DataType>varchar(20)|0</DataType>
+    </column>
+    <column id="23" parent="11" name="study">
+      <Position>8</Position>
+      <DataType>varchar(20)|0</DataType>
+    </column>
+    <column id="24" parent="11" name="blood">
+      <Position>9</Position>
+      <DataType>varchar(10)|0</DataType>
+    </column>
+    <column id="25" parent="11" name="phone">
+      <Position>10</Position>
+      <DataType>varchar(20)|0</DataType>
+    </column>
+    <column id="26" parent="11" name="email">
+      <Position>11</Position>
+      <DataType>varchar(50)|0</DataType>
+    </column>
+    <column id="27" parent="11" name="address">
+      <Position>12</Position>
+      <DataType>varchar(50)|0</DataType>
+    </column>
+    <key id="28" parent="11" name="PRIMARY">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+  </database-model>
+</dataSource>

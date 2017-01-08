@@ -1,7 +1,9 @@
 package com.qq.view;
 
-import com.alibaba.fastjson.JSONObject;
-import com.qq.bean.Messages;
+import com.qq.ClientApplication;
+import com.qq.bean.Message;
+import com.qq.bean.MessageType;
+import com.qq.bean.UserInfo;
 import com.qq.ui.BackgroundPanel;
 import com.qq.ui.MyButton;
 import com.qq.ui.MyOptionPane;
@@ -9,19 +11,21 @@ import com.qq.ui.listener.CloseActionListener;
 import com.qq.ui.listener.MinActionListener;
 import com.qq.ui.listener.MouseDragListener;
 import com.qq.util.MD5;
-import io.netty.channel.ChannelFuture;
+import com.qq.util.PasswordSave;
+import sun.rmi.runtime.Log;
 
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 /**
  * 登录窗口
  */
-public class LoginFrame extends JFrame implements ActionListener {
+public class LoginFrame  extends ClientJFrame implements ActionListener {
 
     private static final long serialVersionUID = 1L;
 
@@ -44,7 +48,9 @@ public class LoginFrame extends JFrame implements ActionListener {
 
 
     public LoginFrame() {
-        ClientApplication.window = this;
+
+
+
         setUndecorated(true);
         setResizable(false);
         setTitle("JavaQQ");
@@ -170,6 +176,14 @@ public class LoginFrame extends JFrame implements ActionListener {
         contentPanel.add(btn_close);
         btn_close.addActionListener(new CloseActionListener(this));
 
+        //加载记住的密码
+        UserInfo userInfo = PasswordSave.load();
+        if(userInfo!=null){
+            name.setText(String.valueOf(userInfo.getQq()));
+            password.setText(userInfo.getPassword());
+            cb_pwd.setSelected(true);
+        }
+
         contentPanel.setLayout(new BorderLayout());
         contentPanel.addMouseMotionListener(new MouseDragListener(contentPanel,this));
 
@@ -201,19 +215,63 @@ public class LoginFrame extends JFrame implements ActionListener {
         //登录
         String user = name.getText();
         String pwd = new String(password.getPassword());
+        long qq = 0;
+        boolean isNumber = true;
+        try {
+            qq = Long.valueOf(user);
+        }catch (NumberFormatException e){
+            isNumber = false;
+        }
+
         if(user.isEmpty()||pwd.isEmpty()){
             MyOptionPane.showMessageDialog(this,"您的输入有误！","提示");
             return;
         }
-        //封装登录消息，并且发送
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("type", Messages.login);
-        jsonObject.put("user",user);
-        jsonObject.put("pwd", MD5.getMD5(pwd));
 
-        ChannelFuture future = ClientApplication.channel.writeAndFlush(jsonObject.toJSONString());
+        if(!isNumber){
+            MyOptionPane.showMessageDialog(this,"请输入正确的QQ号！","提示");
+            return;
+        }
+
+        if(cb_pwd.isSelected()){
+            PasswordSave.save(qq,pwd);
+        }else{
+            PasswordSave.remove();
+        }
+
+        //封装登录消息，并发送
+        Message loginMessage = new Message(MessageType.LOGIN);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setQq(qq);
+        userInfo.setPassword(MD5.getMD5(pwd));
+        loginMessage.setFrom(userInfo);
+
         try {
-            future.get();  //阻塞，避免重复发送
-        } catch (InterruptedException | ExecutionException ignored) { }
+            ClientApplication.getClient().send(loginMessage);
+            Message message = awaitOrAlert();
+            if(message!=null){
+                switch (message.getType()){
+                    case SUCCESS:
+                        //登录成功，进入主窗口
+                        System.out.println("登录成功！");
+                        UserInfo u = message.getFrom();
+                        EventQueue.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                MainFrame mainFrame = new MainFrame(u);
+                                mainFrame.setVisible(true);
+                                LoginFrame.this.dispose();
+                            }
+                        });
+                        break;
+                    case ERROR:
+                        MyOptionPane.showMessageDialog(this,"登录失败："+message.getContent(),"提示");break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            MyOptionPane.showMessageDialog(this,"发送失败："+e.getLocalizedMessage(),"错误");
+        }
+
     }
 }

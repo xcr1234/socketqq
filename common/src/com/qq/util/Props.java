@@ -40,6 +40,10 @@ public class Props {
         return Integer.valueOf(getProperty(key));
     }
 
+    public Boolean getBoolean(String key){
+        return Boolean.valueOf(getProperty(key));
+    }
+
     private Props(File file) throws IOException{
         try (FileInputStream fileInputStream = new FileInputStream(file)){
             properties = new Properties();

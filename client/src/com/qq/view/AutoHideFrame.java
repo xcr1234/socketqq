@@ -8,7 +8,7 @@ import java.awt.event.*;
 /**
  * 类似QQ的停靠在桌面边缘时自动隐藏
  */
-public abstract class AutoHideFrame extends JFrame {
+public abstract class AutoHideFrame extends ClientJFrame {
     private Rectangle rect;
     private int frameLeft;// 窗体离屏幕左边的距离
     private int frameRight;// 窗体离屏幕右边的距离；
@@ -68,6 +68,10 @@ public abstract class AutoHideFrame extends JFrame {
     private boolean isDraging = false;
 
 
+    protected void showWindow(){
+        setLocation(0, 0); //将窗口显示出来
+    }
+
     protected AutoHideFrame(){
         timer.start();
 
@@ -98,8 +102,11 @@ public abstract class AutoHideFrame extends JFrame {
 
     @Override
     public void dispose() {
-        timer.stop();
-        super.dispose();
+        try {
+            timer.stop();
+        }finally {
+            super.dispose();
+        }
     }
 
     private boolean isPtInRect(Rectangle rect, Point point) {

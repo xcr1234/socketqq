@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/client/lib/am-2003-06-20.jar!/" />
+      <root url="jar://$PROJECT_DIR$/client/lib/mediaplayer.jar!/" />
+      <root url="jar://$PROJECT_DIR$/client/lib/sound.jar!/" />
+      <root url="jar://$PROJECT_DIR$/client/lib/jmf.jar!/" />
+      <root url="jar://$PROJECT_DIR$/client/lib/android.ninepatch.jar!/" />
+      <root url="jar://$PROJECT_DIR$/client/lib/miglayout-4.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/client/lib/miglayout-4.0-swing.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

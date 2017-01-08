@@ -8,6 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="common" />
-    <orderEntry type="library" name="sqlite-jdbc-3.15.1" level="project" />
+    <orderEntry type="library" name="mysql-connector-java-5.1.18-bin" level="project" />
   </component>
 </module>

@@ -1,6 +1,11 @@
 package com.qq.view;
 
 
+import com.qq.ClientApplication;
+import com.qq.bean.Message;
+import com.qq.bean.MessageType;
+import com.qq.bean.UserInfo;
+import com.qq.util.Audio;
 import com.qq.util.ImageManager;
 import com.qq.ui.BackgroundPanel;
 import com.qq.ui.MyButton;
@@ -9,14 +14,23 @@ import com.qq.ui.listener.MouseDragListener;
 import com.qq.util.StringUtil;
 
 import javax.swing.*;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MainFrame extends AutoHideFrame{
 
@@ -34,8 +48,22 @@ public class MainFrame extends AutoHideFrame{
     private JLabel lblNick;
     private JLabel lblSign;
 
+    private UserInfo userInfo;
+
+    private DefaultMutableTreeNode top;
+    private List<UserInfo> friends;
+    private DefaultMutableTreeNode selectedNode;
+    private Map<Integer,ChatFrame> windowMap = new ConcurrentHashMap<>();
+
+    public MainFrame(UserInfo userInfo){
+        this();
+        this.userInfo = userInfo;
+        pollFriends();
+    }
+
 
     public MainFrame(){
+        setAlwaysOnTop(true);
         setUndecorated(true);
         setResizable(false);
         setTitle("QQ");
@@ -67,10 +95,7 @@ public class MainFrame extends AutoHideFrame{
         });
         mainPanel.add(btn_close);
 
-        DefaultMutableTreeNode top = new DefaultMutableTreeNode("我的好友");
-        top.add(new DefaultMutableTreeNode("好友"));
-        top.add(new DefaultMutableTreeNode("好友"));
-        top.add(new DefaultMutableTreeNode("好友"));
+        top = new DefaultMutableTreeNode("我的好友");
 
         tree = new JTree(top);
         tree.setRowHeight(30);
@@ -80,6 +105,12 @@ public class MainFrame extends AutoHideFrame{
         renderer.setOpenIcon(ImageManager.getIcon("MainIcon/treeNode1.png"));
         renderer.setFont(new Font("微软雅黑",Font.PLAIN,22));
         tree.setCellRenderer(renderer);
+        tree.addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+            }
+        });
         mainPanel.add(tree);
 
         popupMenu = new JPopupMenu();
@@ -126,6 +157,39 @@ public class MainFrame extends AutoHideFrame{
                     popupMenu.show(tree, e.getX(), e.getY());
                 }
             }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(!trayMessageList.isEmpty()){
+                    //托盘双击有待处理的消息，先处理消息。
+                    return;
+                }
+                if(e.getClickCount() == 2){
+                    if(selectedNode!=null&&selectedNode!=top){
+                        int index = top.getIndex(selectedNode);
+                        final UserInfo userInfo = friends.get(index);
+                        if(userInfo==null){
+                            return;
+                        }
+                        System.out.println("跟好友"+userInfo.getNickname()+"聊天.");
+                        ChatFrame window = windowMap.get(userInfo.getId());
+                        if(window == null){
+                            EventQueue.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ChatFrame chatFrame = new ChatFrame();
+                                    chatFrame.setUserInfo(userInfo);
+                                    chatFrame.setSelf(MainFrame.this.userInfo);
+                                    chatFrame.setVisible(true);
+                                    windowMap.put(userInfo.getId(),chatFrame);
+                                }
+                            });
+                        }else{
+                            window.setVisible(true);
+                        }
+                    }
+                }
+            }
         });
 
         lblNick = new JLabel();
@@ -152,6 +216,9 @@ public class MainFrame extends AutoHideFrame{
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setType(JFrame.Type.UTILITY);
         setLocationRelativeTo(null);
+
+
+        ClientApplication.setMainFrame(this);
     }
 
     public void setNickName(String nickName){
@@ -163,6 +230,7 @@ public class MainFrame extends AutoHideFrame{
         lblSign.setToolTipText(sign);
         lblSign.setText(StringUtil.maxlen(sign,10));
     }
+
 
 
     private void initTray(){
@@ -187,6 +255,25 @@ public class MainFrame extends AutoHideFrame{
         }
     }
 
+    private List<Message> trayMessageList = new LinkedList<>();
+
+    public void onMessage(Message message){
+        UserInfo userInfo = message.getFrom();
+        ChatFrame window = windowMap.get(userInfo.getId());
+        if(window!=null){
+            window.appendText(message);
+        }else{
+            //此时托盘闪烁，然后播放MSG声音。
+            trayMessageList.add(message); //将待收的消息放到一条队列中，每次双击托盘图标的时候，都显示一条
+            Audio.playAsync(Audio.MSG);
+            trayShake();
+        }
+    }
+
+    private void trayShake(){
+
+    }
+
     private void confirmExit(){
         //确认是否退出
         if(MyOptionPane.showConfirmDialog(this,"确认退出","您是否要退出QQ程序？","是","否")==0){
@@ -195,6 +282,52 @@ public class MainFrame extends AutoHideFrame{
             }
             dispose();
         }
+    }
+    private static void expandTree(JTree tree) {    //展开jtree下的所有节点
+        TreeNode root = (TreeNode) tree.getModel().getRoot();
+        expandAll(tree, new TreePath(root), true);
+    }
+    private static void expandAll(JTree tree, TreePath parent, boolean expand) {
+
+        //Traverse children
+        TreeNode node = (TreeNode) parent.
+                getLastPathComponent();
+        if (node.getChildCount() >= 0) {
+            for (Enumeration e = node.children(); e.hasMoreElements(); ) {
+                TreeNode n = (TreeNode) e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                expandAll(tree, path, expand);
+            }
+        }
+
+        if (expand) {
+            tree.expandPath(parent);
+        } else {
+            tree.collapsePath(parent);
+        }
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private void pollFriends(){
+        //发送一条poll的消息表示需要所有的好友.
+        Message req = new Message(MessageType.POLL);
+        req.setFrom(userInfo);
+        sendOrAlert(req);
+        Message res = awaitOrAlert();
+        switch (res.getType()){
+            case SUCCESS:
+                top.removeAllChildren();
+                friends = (List<UserInfo>) res.getData();
+                for(UserInfo friend:friends){
+                    top.add(new DefaultMutableTreeNode(friend.getNickname()));
+                }
+                expandTree(tree);
+                break;
+            case ERROR:
+                MyOptionPane.showMessageDialog(this,"获取好友信息失败："+res.getContent(),"提示");break;
+        }
+
     }
 
 

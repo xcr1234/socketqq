@@ -11,7 +11,7 @@ import java.awt.event.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class RegFrame extends JFrame implements ActionListener{
+public class RegFrame  extends ClientJFrame implements ActionListener{
 
     BackgroundPanel contentPanel = new BackgroundPanel("register");
 
@@ -55,6 +55,7 @@ public class RegFrame extends JFrame implements ActionListener{
     JComboBox comboBox_icon;
 
     public RegFrame(){
+        super();
         setUndecorated(true);
         setResizable(false);
         setBounds(500, 50, 500, 524);
